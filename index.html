@@ -46,7 +46,7 @@
     margin-bottom: 6px;
     color: #4b3cb2;
   }
-  input[type="text"], select {
+  input[type="text"] {
     width: 100%;
     padding: 10px 12px;
     border-radius: 6px;
@@ -54,7 +54,7 @@
     font-size: 15px;
     transition: border-color 0.3s ease;
   }
-  input[type="text"]:focus, select:focus {
+  input[type="text"]:focus {
     border-color: #5a3eeb;
     outline: none;
   }
@@ -127,62 +127,62 @@
 </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" role="main" aria-label="Beni Tanıyor Musun? Testi Uygulaması">
     <h1>Beni ne kadar iyi tanıyorsun</h1>
 
-    <!-- Form Bölümü -->
-    <section id="form-section" class="section active">
+    <!-- Soru ekleme formu -->
+    <section id="form-section" class="section" aria-live="polite">
       <label for="question-text">Soru Metni (sorunuzu yazın):</label>
-      <input type="text" id="question-text" />
+      <input type="text" id="question-text" autocomplete="off" aria-required="true" />
 
       <label for="correct-answer">Doğru Cevap (doğru cevabı yaz):</label>
-      <input type="text" id="correct-answer">
+      <input type="text" id="correct-answer" autocomplete="off" aria-required="true">
 
       <label for="wrong-answer1">Yanlış Cevap 1 (yanlış cevabı yaz):</label>
-      <input type="text" id="wrong-answer1"  />
+      <input type="text" id="wrong-answer1" autocomplete="off" aria-required="true" />
 
       <label for="wrong-answer2">Yanlış Cevap 2 (yanlış cevabı yaz):</label>
-      <input type="text" id="wrong-answer2"  />
+      <input type="text" id="wrong-answer2" autocomplete="off" aria-required="true" />
 
       <label for="wrong-answer3">Yanlış Cevap 3 (yanlış cevabı yaz):</label>
-      <input type="text" id="wrong-answer3"  />
+      <input type="text" id="wrong-answer3" autocomplete="off" aria-required="true" />
 
-      <button id="add-question-btn">Soruyu Kaydet</button>
+      <button id="add-question-btn" type="button" aria-label="Soruyu kaydet ve listeye ekle">Soruyu Kaydet</button>
 
       <div style="margin-top: 20px;">
         <strong>Eklenen Sorular:</strong>
-        <ul id="question-list" style="max-height: 130px; overflow-y: auto; margin-top: 8px; padding-left: 18px;"></ul>
+        <ul id="question-list" style="max-height: 130px; overflow-y: auto; margin-top: 8px; padding-left: 18px;" aria-live="polite" aria-relevant="additions"></ul>
       </div>
 
-      <button id="start-test-btn" style="margin-top: 30px;" disabled>Teste Başla</button>
+      <button id="start-test-btn" type="button" disabled aria-label="Teste başla">Teste Başla</button>
     </section>
 
-    <!-- Test Bölümü -->
-    <section id="test-section" class="section">
+    <!-- Test ekranı -->
+    <section id="test-section" class="section" aria-live="polite">
       <div id="question-container" class="question-block">
         <h3 id="question-title"></h3>
         <div id="options-container" class="options"></div>
       </div>
 
       <div class="nav-buttons">
-        <button id="prev-btn" disabled>Önceki</button>
-        <button id="next-btn" disabled>Sonraki</button>
+        <button id="prev-btn" type="button" disabled aria-label="Önceki soruya git">Önceki</button>
+        <button id="next-btn" type="button" disabled aria-label="Sonraki soruya git">Sonraki</button>
       </div>
 
-      <button id="finish-btn" style="margin-top: 25px; display:none;">Testi Bitir</button>
+      <button id="finish-btn" type="button" style="margin-top: 25px; display:none;" aria-label="Testi bitir">Testi Bitir</button>
     </section>
 
-    <!-- Sonuç Bölümü -->
-    <section id="result-section" class="section">
-      <div class="score" id="final-score"></div>
-      <div class="message" id="final-message"></div>
-      <button id="restart-btn" style="margin-top: 30px;">Yeniden Başla</button>
+    <!-- Sonuç ekranı -->
+    <section id="result-section" class="section" aria-live="polite">
+      <div class="score" id="final-score" aria-atomic="true"></div>
+      <div class="message" id="final-message" aria-atomic="true"></div>
+      <button id="restart-btn" type="button" style="margin-top: 30px;" aria-label="Teste yeniden başla">Yeniden Başla</button>
     </section>
   </div>
 
 <script>
 (() => {
-  // Elemanlar
+  // DOM elemanları referansları
   const formSection = document.getElementById('form-section');
   const testSection = document.getElementById('test-section');
   const resultSection = document.getElementById('result-section');
@@ -208,17 +208,22 @@
   const finalMessage = document.getElementById('final-message');
   const restartBtn = document.getElementById('restart-btn');
 
+  // Veri ve durum değişkenleri
   let questions = [];
   let currentIndex = 0;
   let userAnswers = [];
 
   // URL parametresini al
   function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    } catch {
+      return null;
+    }
   }
 
-  // Soruyu listeye ekle ve inputları temizle
+  // Soruyu listeye ekle, inputları temizle, buton durumunu güncelle
   function addQuestion() {
     const qText = questionText.value.trim();
     const cAnswer = correctAnswer.value.trim();
@@ -231,6 +236,12 @@
       return;
     }
 
+    // Aynı soru metni tekrar eklenmesin (opsiyonel)
+    if(questions.some(q => q.question.toLowerCase() === qText.toLowerCase())) {
+      alert('Bu soru zaten eklenmiş.');
+      return;
+    }
+
     questions.push({
       question: qText,
       correct: cAnswer,
@@ -239,7 +250,7 @@
 
     updateQuestionList();
 
-    // Temizle
+    // Inputları temizle
     questionText.value = '';
     correctAnswer.value = '';
     wrongAnswer1.value = '';
@@ -249,49 +260,72 @@
     startTestBtn.disabled = false;
   }
 
-  // Soruları ekranda göster
+  // Soruları ekranda listele
   function updateQuestionList() {
     questionList.innerHTML = '';
     questions.forEach((q, i) => {
       const li = document.createElement('li');
-      li.textContent = (i+1) + '. ' + q.question;
+      li.textContent = `${i + 1}. ${q.question}`;
       questionList.appendChild(li);
     });
   }
 
   // Test ekranını göster
   function showTest() {
+    if(questions.length === 0) {
+      alert('Test başlatılamadı: Kayıtlı soru bulunamadı. Lütfen önce soruları ekleyin.');
+      showForm();
+      return;
+    }
+
     formSection.classList.remove('active');
     testSection.classList.add('active');
     resultSection.classList.remove('active');
 
     currentIndex = 0;
-    userAnswers = Array(questions.length).fill(null);
+    userAnswers = new Array(questions.length).fill(null);
 
     renderQuestion();
     updateNavButtons();
   }
 
-  // Soru ve seçenekleri göster
+  // Form ekranını göster
+  function showForm() {
+    formSection.classList.add('active');
+    testSection.classList.remove('active');
+    resultSection.classList.remove('active');
+  }
+
+  // Sonuç ekranını göster
+  function showResult() {
+    formSection.classList.remove('active');
+    testSection.classList.remove('active');
+    resultSection.classList.add('active');
+  }
+
+  // Soruyu ve seçenekleri göster
   function renderQuestion() {
     const q = questions[currentIndex];
+    if(!q) return;
+
     questionTitle.textContent = `${currentIndex + 1}. ${q.question}`;
 
-    // Seçenekleri karıştır ve göster
     const options = shuffleArray([q.correct, ...q.wrongs]);
     optionsContainer.innerHTML = '';
 
     options.forEach(opt => {
-      const optionId = `option-${opt}-${currentIndex}`;
+      const optionId = `option-${currentIndex}-${opt.replace(/\s+/g, '')}`;
+
       const label = document.createElement('label');
       label.className = 'option';
+      label.htmlFor = optionId;
 
       const input = document.createElement('input');
       input.type = 'radio';
       input.name = 'option';
+      input.id = optionId;
       input.value = opt;
 
-      // Eğer kullanıcı daha önce cevap vermişse seçili yap
       if(userAnswers[currentIndex] === opt) input.checked = true;
 
       input.addEventListener('change', () => {
@@ -305,45 +339,49 @@
     });
   }
 
-  // Düğmelerin durumunu güncelle
+  // Düğmelerin aktif/pasif durumunu güncelle
   function updateNavButtons() {
     prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === questions.length - 1 || userAnswers[currentIndex] === null;
+    nextBtn.disabled = currentIndex === questions.length -1 || userAnswers[currentIndex] === null;
     finishBtn.style.display = (currentIndex === questions.length - 1 && userAnswers[currentIndex] !== null) ? 'block' : 'none';
   }
 
-  // Karıştırma fonksiyonu (Fisher-Yates)
+  // Fisher-Yates algoritması ile diziyi karıştır
   function shuffleArray(array) {
     const arr = array.slice();
     for(let i = arr.length -1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i+1));
+      const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
   }
 
-  // Test bitirme ve sonuç gösterme
+  // Testi bitir ve sonuçları göster
   function finishTest() {
+    if(userAnswers.includes(null)) {
+      alert('Lütfen tüm soruları cevaplayın!');
+      return;
+    }
+
     let score = 0;
     questions.forEach((q, i) => {
       if(userAnswers[i] === q.correct) score++;
     });
 
-    testSection.classList.remove('active');
-    resultSection.classList.add('active');
-
     finalScore.textContent = `Puanınız: ${score} / ${questions.length}`;
 
     if(score === questions.length) {
-      finalMessage.textContent = 'Mükemmel! beni gerçekten çok iyi tanıyorsun helal olsun sana.';
+      finalMessage.textContent = 'Mükemmel! Beni gerçekten çok iyi tanıyorsun, helal olsun sana.';
     } else if(score >= questions.length * 0.7) {
       finalMessage.textContent = 'İyi iş çıkardın, ama biraz daha dikkat et.';
     } else {
       finalMessage.textContent = 'Daha çok çalışmalısın, beni tanımakta zorlandın.';
     }
+
+    showResult();
   }
 
-  // Yeniden başlat
+  // Testi yeniden başlat
   function restart() {
     questions = [];
     userAnswers = [];
@@ -352,40 +390,32 @@
     finalScore.textContent = '';
     finalMessage.textContent = '';
 
-    resultSection.classList.remove('active');
-    testSection.classList.remove('active');
-    formSection.classList.add('active');
-
     startTestBtn.disabled = true;
+
+    showForm();
   }
 
-  // Sayfa açılırken URL parametresine göre ekran seç
+  // Sayfa yüklendiğinde işlem yap
   document.addEventListener('DOMContentLoaded', () => {
-    // Sayfa her açıldığında soruları temizle
-    localStorage.removeItem('questions');
-
-    // questions dizisini boş yap
+    // Soruları sıfırla (localStorage kullanılmıyor)
     questions = [];
     questionList.innerHTML = '';
     startTestBtn.disabled = true;
 
-    // URL parametresi kontrolü
+    // URL'den ekran parametresi al
     const screen = getQueryParam('screen');
     if(screen === 'test') {
-      if(questions.length > 0) {
-        showTest();
-      } else {
-        alert('Test başlatılamadı: Kayıtlı soru bulunamadı. Lütfen önce soruları ekleyin.');
-        formSection.classList.add('active');
-      }
+      alert('Test başlatılamadı: Kayıtlı soru bulunamadı. Lütfen önce soruları ekleyin.');
+      showForm();
     } else {
-      formSection.classList.add('active');
+      showForm();
     }
   });
 
-  // Event Listeners
+  // Event Listener'lar
   addQuestionBtn.addEventListener('click', addQuestion);
   startTestBtn.addEventListener('click', showTest);
+
   prevBtn.addEventListener('click', () => {
     if(currentIndex > 0) {
       currentIndex--;
@@ -393,6 +423,7 @@
       updateNavButtons();
     }
   });
+
   nextBtn.addEventListener('click', () => {
     if(currentIndex < questions.length - 1 && userAnswers[currentIndex] !== null) {
       currentIndex++;
@@ -400,8 +431,10 @@
       updateNavButtons();
     }
   });
+
   finishBtn.addEventListener('click', finishTest);
   restartBtn.addEventListener('click', restart);
+
 })();
 </script>
 </body>
