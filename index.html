@@ -364,30 +364,6 @@
     startTestBtn.disabled = true;
   }
 
-  // Sayfa açılırken URL parametresine göre ekran seç
-  document.addEventListener('DOMContentLoaded', () => {
-    // LocalStorage'daki soruları yükle
-    const savedQuestions = localStorage.getItem('questions');
-    if(savedQuestions) {
-      questions = JSON.parse(savedQuestions);
-      if(questions.length > 0) {
-        updateQuestionList();
-        startTestBtn.disabled = false;
-      }
-    }
-
-    const screen = getQueryParam('screen');
-    if(screen === 'test') {
-      if(questions.length > 0) {
-        showTest();
-      } else {
-        alert('Test başlatılamadı: Kayıtlı soru bulunamadı. Lütfen önce soruları ekleyin.');
-        formSection.classList.add('active');
-      }
-    } else {
-      formSection.classList.add('active');
-    }
-  });
 
   // Event Listeners
   addQuestionBtn.addEventListener('click', addQuestion);
