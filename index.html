@@ -131,8 +131,8 @@
     <h1>Beni ne kadar iyi tanıyorsun</h1>
 
     <!-- Form Bölümü -->
-    <section id="form-section" class="section">
-      <label for="question-text">Soru Metni(sorunuzu yazın):</label>
+    <section id="form-section" class="section active">
+      <label for="question-text">Soru Metni (sorunuzu yazın):</label>
       <input type="text" id="question-text" />
 
       <label for="correct-answer">Doğru Cevap (doğru cevabı yaz):</label>
@@ -182,7 +182,7 @@
 
 <script>
 (() => {
-  // Elementler
+  // Elemanlar
   const formSection = document.getElementById('form-section');
   const testSection = document.getElementById('test-section');
   const resultSection = document.getElementById('result-section');
@@ -212,7 +212,7 @@
   let currentIndex = 0;
   let userAnswers = [];
 
-  // URL parametresi okuma fonksiyonu
+  // URL parametresini al
   function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
@@ -238,9 +238,6 @@
     });
 
     updateQuestionList();
-
-    // LocalStorage'a kaydet
-    localStorage.setItem('questions', JSON.stringify(questions));
 
     // Temizle
     questionText.value = '';
@@ -355,8 +352,6 @@
     finalScore.textContent = '';
     finalMessage.textContent = '';
 
-    localStorage.removeItem('questions');
-
     resultSection.classList.remove('active');
     testSection.classList.remove('active');
     formSection.classList.add('active');
@@ -364,15 +359,33 @@
     startTestBtn.disabled = true;
   }
 
+  // Sayfa açılırken URL parametresine göre ekran seç
+  document.addEventListener('DOMContentLoaded', () => {
+    // Sayfa her açıldığında soruları temizle
+    localStorage.removeItem('questions');
+
+    // questions dizisini boş yap
+    questions = [];
+    questionList.innerHTML = '';
+    startTestBtn.disabled = true;
+
+    // URL parametresi kontrolü
+    const screen = getQueryParam('screen');
+    if(screen === 'test') {
+      if(questions.length > 0) {
+        showTest();
+      } else {
+        alert('Test başlatılamadı: Kayıtlı soru bulunamadı. Lütfen önce soruları ekleyin.');
+        formSection.classList.add('active');
+      }
+    } else {
+      formSection.classList.add('active');
+    }
+  });
 
   // Event Listeners
   addQuestionBtn.addEventListener('click', addQuestion);
-  startTestBtn.addEventListener('click', () => {
-    // URL'yi ?screen=test olarak güncelle
-    const newUrl = window.location.origin + window.location.pathname + '?screen=test';
-    window.history.pushState({path:newUrl}, '', newUrl);
-    showTest();
-  });
+  startTestBtn.addEventListener('click', showTest);
   prevBtn.addEventListener('click', () => {
     if(currentIndex > 0) {
       currentIndex--;
@@ -388,13 +401,7 @@
     }
   });
   finishBtn.addEventListener('click', finishTest);
-  restartBtn.addEventListener('click', () => {
-    // URL'den screen parametresini kaldır
-    const newUrl = window.location.origin + window.location.pathname;
-    window.history.pushState({path:newUrl}, '', newUrl);
-    restart();
-  });
-
+  restartBtn.addEventListener('click', restart);
 })();
 </script>
 </body>
