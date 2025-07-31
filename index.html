@@ -131,7 +131,7 @@
     <h1>Beni ne kadar iyi tanıyorsun</h1>
 
     <!-- Soru ekleme formu -->
-    <section id="form-section" class="section" aria-live="polite">
+    <section id="form-section" class="section active" aria-live="polite">
       <label for="question-text">Soru Metni (sorunuzu yazın):</label>
       <input type="text" id="question-text" autocomplete="off" aria-required="true" />
 
@@ -182,7 +182,7 @@
 
 <script>
 (() => {
-  // DOM elemanları referansları
+  // DOM referansları
   const formSection = document.getElementById('form-section');
   const testSection = document.getElementById('test-section');
   const resultSection = document.getElementById('result-section');
@@ -208,22 +208,11 @@
   const finalMessage = document.getElementById('final-message');
   const restartBtn = document.getElementById('restart-btn');
 
-  // Veri ve durum değişkenleri
   let questions = [];
   let currentIndex = 0;
   let userAnswers = [];
 
-  // URL parametresini al
-  function getQueryParam(param) {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    } catch {
-      return null;
-    }
-  }
-
-  // Soruyu listeye ekle, inputları temizle, buton durumunu güncelle
+  // Soruyu ekle
   function addQuestion() {
     const qText = questionText.value.trim();
     const cAnswer = correctAnswer.value.trim();
@@ -231,13 +220,12 @@
     const w2 = wrongAnswer2.value.trim();
     const w3 = wrongAnswer3.value.trim();
 
-    if(!qText || !cAnswer || !w1 || !w2 || !w3) {
+    if (!qText || !cAnswer || !w1 || !w2 || !w3) {
       alert('Lütfen tüm alanları doldurun!');
       return;
     }
 
-    // Aynı soru metni tekrar eklenmesin (opsiyonel)
-    if(questions.some(q => q.question.toLowerCase() === qText.toLowerCase())) {
+    if (questions.some(q => q.question.toLowerCase() === qText.toLowerCase())) {
       alert('Bu soru zaten eklenmiş.');
       return;
     }
@@ -250,7 +238,6 @@
 
     updateQuestionList();
 
-    // Inputları temizle
     questionText.value = '';
     correctAnswer.value = '';
     wrongAnswer1.value = '';
@@ -260,7 +247,7 @@
     startTestBtn.disabled = false;
   }
 
-  // Soruları ekranda listele
+  // Soruları listele
   function updateQuestionList() {
     questionList.innerHTML = '';
     questions.forEach((q, i) => {
@@ -272,7 +259,7 @@
 
   // Test ekranını göster
   function showTest() {
-    if(questions.length === 0) {
+    if (questions.length === 0) {
       alert('Test başlatılamadı: Kayıtlı soru bulunamadı. Lütfen önce soruları ekleyin.');
       showForm();
       return;
@@ -303,10 +290,10 @@
     resultSection.classList.add('active');
   }
 
-  // Soruyu ve seçenekleri göster
+  // Soru ve seçenekleri göster
   function renderQuestion() {
     const q = questions[currentIndex];
-    if(!q) return;
+    if (!q) return;
 
     questionTitle.textContent = `${currentIndex + 1}. ${q.question}`;
 
@@ -326,7 +313,7 @@
       input.id = optionId;
       input.value = opt;
 
-      if(userAnswers[currentIndex] === opt) input.checked = true;
+      if (userAnswers[currentIndex] === opt) input.checked = true;
 
       input.addEventListener('change', () => {
         userAnswers[currentIndex] = opt;
@@ -339,40 +326,40 @@
     });
   }
 
-  // Düğmelerin aktif/pasif durumunu güncelle
+  // Düğmelerin durumunu güncelle
   function updateNavButtons() {
     prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === questions.length -1 || userAnswers[currentIndex] === null;
+    nextBtn.disabled = currentIndex === questions.length - 1 || userAnswers[currentIndex] === null;
     finishBtn.style.display = (currentIndex === questions.length - 1 && userAnswers[currentIndex] !== null) ? 'block' : 'none';
   }
 
-  // Fisher-Yates algoritması ile diziyi karıştır
+  // Diziyi karıştır (Fisher-Yates)
   function shuffleArray(array) {
     const arr = array.slice();
-    for(let i = arr.length -1; i > 0; i--) {
+    for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
   }
 
-  // Testi bitir ve sonuçları göster
+  // Testi bitir
   function finishTest() {
-    if(userAnswers.includes(null)) {
+    if (userAnswers.includes(null)) {
       alert('Lütfen tüm soruları cevaplayın!');
       return;
     }
 
     let score = 0;
     questions.forEach((q, i) => {
-      if(userAnswers[i] === q.correct) score++;
+      if (userAnswers[i] === q.correct) score++;
     });
 
     finalScore.textContent = `Puanınız: ${score} / ${questions.length}`;
 
-    if(score === questions.length) {
+    if (score === questions.length) {
       finalMessage.textContent = 'Mükemmel! Beni gerçekten çok iyi tanıyorsun, helal olsun sana.';
-    } else if(score >= questions.length * 0.7) {
+    } else if (score >= questions.length * 0.7) {
       finalMessage.textContent = 'İyi iş çıkardın, ama biraz daha dikkat et.';
     } else {
       finalMessage.textContent = 'Daha çok çalışmalısın, beni tanımakta zorlandın.';
@@ -395,29 +382,18 @@
     showForm();
   }
 
-  // Sayfa yüklendiğinde işlem yap
+  // Sayfa yüklenince
   document.addEventListener('DOMContentLoaded', () => {
-    // Soruları sıfırla (localStorage kullanılmıyor)
-    questions = [];
-    questionList.innerHTML = '';
-    startTestBtn.disabled = true;
-
-    // URL'den ekran parametresi al
-    const screen = getQueryParam('screen');
-    if(screen === 'test') {
-      alert('Test başlatılamadı: Kayıtlı soru bulunamadı. Lütfen önce soruları ekleyin.');
-      showForm();
-    } else {
-      showForm();
-    }
+    // Başlangıçta formu göster
+    showForm();
   });
 
-  // Event Listener'lar
+  // Event listenerlar
   addQuestionBtn.addEventListener('click', addQuestion);
   startTestBtn.addEventListener('click', showTest);
 
   prevBtn.addEventListener('click', () => {
-    if(currentIndex > 0) {
+    if (currentIndex > 0) {
       currentIndex--;
       renderQuestion();
       updateNavButtons();
@@ -425,7 +401,7 @@
   });
 
   nextBtn.addEventListener('click', () => {
-    if(currentIndex < questions.length - 1 && userAnswers[currentIndex] !== null) {
+    if (currentIndex < questions.length - 1 && userAnswers[currentIndex] !== null) {
       currentIndex++;
       renderQuestion();
       updateNavButtons();
